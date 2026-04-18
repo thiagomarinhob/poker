@@ -1,0 +1,53 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "migrations/"
+    queries: "internal/user/queries.sql"
+    gen:
+      go:
+        package: "user"
+        out: "internal/user"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_db_tags: true
+        emit_pointers_for_null_types: true
+        emit_interface: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "citext"
+            go_type: "string"
+  - engine: "postgresql"
+    schema: "migrations/"
+    queries: "internal/pokerdb/queries.sql"
+    gen:
+      go:
+        package: "pokerdb"
+        out: "internal/pokerdb"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_db_tags: true
+        emit_pointers_for_null_types: true
+        emit_interface: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "citext"
+            go_type: "string"
+  - engine: "postgresql"
+    schema: "migrations/"
+    queries: "internal/auditlog/queries.sql"
+    gen:
+      go:
+        package: "auditlog"
+        out: "internal/auditlog"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_db_tags: true
+        emit_pointers_for_null_types: true
+        emit_interface: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "citext"
+            go_type: "string"

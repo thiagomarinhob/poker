@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod *)",
+      "Read(//usr/local/go/bin/**)",
+      "Read(//home/thiago/go/bin/**)",
+      "Read(//usr/**)",
+      "Bash(/usr/local/go/bin/go mod *)",
+      "Bash(/usr/local/go/bin/go get *)",
+      "Bash(npm create *)",
+      "Bash(/usr/local/go/bin/go build *)",
+      "Bash(docker compose *)",
+      "Bash(/usr/local/go/bin/go vet *)",
+      "Bash(/usr/local/go/bin/go env *)",
+      "Bash(GOPATH=/home/thiago/go /usr/local/go/bin/go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest)",
+      "Bash(GOPATH=/home/thiago/go /usr/local/go/bin/go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest)",
+      "Bash(/home/thiago/go/bin/sqlc generate *)",
+      "Bash(make -n migrate-up)",
+      "Bash(make -n sqlc)",
+      "Bash(make -n migrate-create name=add_sessions)",
+      "Bash(/usr/local/go/bin/go test *)",
+      "Bash(snap list *)",
+      "Bash(apt list *)",
+      "Read(//snap/bin/**)",
+      "Bash(go get *)",
+      "Bash(go build *)",
+      "Bash(psql -U postgres -c \"\\\\du poker\")",
+      "Bash(psql -U postgres -c \"\\\\l poker\")",
+      "Bash(pg_lsclusters)",
+      "Bash(sudo -u postgres psql -c \"\\\\du\")",
+      "Bash(docker-compose ps *)",
+      "Bash(docker exec *)",
+      "Bash(PGPASSWORD=changeme psql -h localhost -U poker -d poker_db -c \"SELECT 1\")",
+      "Bash(go test *)"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Go
+poker-backend/tmp/
+poker-backend/vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work.sum
+
+# Node / Frontend
+poker-frontend/node_modules/
+poker-frontend/dist/
+poker-frontend/.vite/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+
+# Docker volumes (if bind-mounted locally)
+.postgres/
+.redis/
