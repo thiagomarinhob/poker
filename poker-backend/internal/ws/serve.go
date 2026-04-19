@@ -13,16 +13,18 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/thiagomarinho/poker-backend/internal/auth"
 	"github.com/thiagomarinho/poker-backend/internal/game"
+	"github.com/thiagomarinho/poker-backend/internal/user"
 	"nhooyr.io/websocket"
 )
 
 type Handler struct {
-	hub       *Hub
-	jwtSecret string
+	hub         *Hub
+	jwtSecret   string
+	userQueries *user.Queries
 }
 
-func NewHandler(h *Hub, jwtSecret string) *Handler {
-	return &Handler{hub: h, jwtSecret: jwtSecret}
+func NewHandler(h *Hub, jwtSecret string, userQueries *user.Queries) *Handler {
+	return &Handler{hub: h, jwtSecret: jwtSecret, userQueries: userQueries}
 }
 
 func (h *Handler) RegisterRoutes(rg *gin.RouterGroup) {
@@ -180,12 +182,19 @@ func (h *Handler) handleJoin(_ context.Context, cl *Client, p map[string]any) er
 			return err
 		}
 	} else {
+		displayEmail := ""
+		if h.userQueries != nil {
+			if u, err := h.userQueries.GetUserByID(context.Background(), cl.userID); err == nil {
+				displayEmail = u.Email
+			}
+		}
 		sd := game.SitDown{
-			PlayerID: pid,
-			UserID:   nil,
-			Seat:     seat,
-			BuyIn:    buyIn,
-			SitOut:   false,
+			PlayerID:     pid,
+			UserID:       nil,
+			Seat:         seat,
+			BuyIn:        buyIn,
+			SitOut:       false,
+			DisplayEmail: displayEmail,
 		}
 		if err := sendRoom(gr, sd); err != nil {
 			h.hub.unsubscribeUser(cl.userID)

@@ -32,7 +32,8 @@ export interface TableStateView {
   hand_number?: number
   dealer_seat?: number
   street: string
-  board: string[]
+  /** JSON pode vir `null` quando ainda não há mão ativa (slice nil no Go). */
+  board: string[] | null
   pot: number
   seats: TableSeatView[]
   your_cards?: string[]
@@ -100,6 +101,8 @@ export interface HandResultPayload {
   hand_id: string
   hand_number: number
   winners: string[]
+  /** Rótulos amigáveis (email) alinhados a `winners`; ausente em servidores antigos. */
+  winner_emails?: string[]
 }
 
 export interface ErrorPayload {

@@ -108,10 +108,11 @@ func (h *Hub) dispatchRoomEvent(tableID uuid.UUID, gr *game.Room, ev game.Event)
 	case game.HandComplete:
 		hc := ev.(game.HandComplete)
 		raw := mustEnvelope(TypeHandResult, map[string]any{
-			"table_id":    tableID.String(),
-			"hand_id":     hc.HandID.String(),
-			"hand_number": hc.HandNumber,
-			"winners":     hc.Winners,
+			"table_id":        tableID.String(),
+			"hand_id":         hc.HandID.String(),
+			"hand_number":     hc.HandNumber,
+			"winners":         hc.Winners,
+			"winner_emails":   hc.WinnerEmails,
 		})
 		h.broadcastRawToTable(tableID, raw)
 	default:

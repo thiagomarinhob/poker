@@ -38,9 +38,12 @@ export function useTableActionLog(
     const rid = `${lastHandResult.hand_id}-${lastHandResult.hand_number}`
     if (prev.current.lastResultId === rid) return
     prev.current.lastResultId = rid
-    setEntries((e) =>
-      push(e, `Fim da mão #${lastHandResult.hand_number} — vencedores: ${lastHandResult.winners.join(', ') || '—'}`),
-    )
+    const names =
+      lastHandResult.winner_emails &&
+      lastHandResult.winner_emails.length === lastHandResult.winners.length
+        ? lastHandResult.winner_emails
+        : lastHandResult.winners
+    setEntries((e) => push(e, `Fim da mão #${lastHandResult.hand_number} — vencedores: ${names.join(', ') || '—'}`))
   }, [lastHandResult])
 
   useEffect(() => {
@@ -51,12 +54,13 @@ export function useTableActionLog(
 
   useEffect(() => {
     if (!tableState) return
+    const boardLen = (tableState.board ?? []).length
     const p = prev.current
     if (!p.ready) {
       p.ready = true
       p.hand = tableState.hand_number ?? -1
       p.street = tableState.street
-      p.boardLen = tableState.board.length
+      p.boardLen = boardLen
       p.actionIdx = tableState.action_on_index
       return
     }
@@ -74,12 +78,12 @@ export function useTableActionLog(
       updates.push(`Rua: ${tableState.street} · pote ${tableState.pot}`)
     }
 
-    if (tableState.board.length > p.boardLen) {
-      updates.push(`Cartas no board: ${tableState.board.length}`)
-      p.boardLen = tableState.board.length
-    } else if (tableState.board.length < p.boardLen) {
+    if (boardLen > p.boardLen) {
+      updates.push(`Cartas no board: ${boardLen}`)
+      p.boardLen = boardLen
+    } else if (boardLen < p.boardLen) {
       updates.push('Board limpo')
-      p.boardLen = tableState.board.length
+      p.boardLen = boardLen
     }
 
     const ai = tableState.action_on_index

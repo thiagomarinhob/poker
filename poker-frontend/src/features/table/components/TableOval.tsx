@@ -6,7 +6,7 @@ import { SeatTile } from './SeatTile'
 
 export const OVAL_SEAT_COUNT = 6
 
-/** Posições fixas no felt (percentuais do retângulo da mesa). */
+/** Posições fixas no felt (percentuais do retângulo da mesa). Índice 0 = base central (visão do herói). */
 const SEAT_POS: { top: string; left: string }[] = [
   { top: '86%', left: '50%' },
   { top: '74%', left: '82%' },
@@ -35,7 +35,23 @@ export function TableOval({
   centerBoard,
   heroCards,
 }: TableOvalProps) {
-  const dealer = tableState.dealer_seat ?? -1
+  const maxSeats = tableState.seats.length
+  const heroPhysical = yourId ? tableState.seats.findIndex((s) => s.player_id === yourId) : -1
+  const rotate = heroPhysical >= 0 && maxSeats > 0
+  const slotCount = maxSeats > 0 ? Math.min(OVAL_SEAT_COUNT, maxSeats) : 0
+  const dealerPhysical = tableState.dealer_seat ?? -1
+
+  const physicalForSlot = (displaySlot: number) => {
+    if (maxSeats <= 0) return 0
+    if (!rotate) return displaySlot
+    return (heroPhysical + displaySlot) % maxSeats
+  }
+
+  const timerPhysical = timerSeatIndex
+  const timerDisplaySlot =
+    rotate && timerPhysical !== null && timerPhysical >= 0
+      ? (timerPhysical - heroPhysical + maxSeats) % maxSeats
+      : timerPhysical
 
   return (
     <div className="relative mx-auto w-full max-w-4xl px-2">
@@ -54,21 +70,25 @@ export function TableOval({
           <AnimatedPot amount={tableState.pot} />
           {centerBoard}
         </div>
-        {SEAT_POS.map((pos, i) => {
-          const seat = tableState.seats[i]
+        {slotCount > 0 &&
+          Array.from({ length: slotCount }, (_, displaySlot) => {
+          const pos = SEAT_POS[displaySlot] ?? SEAT_POS[0]
+          const physical = physicalForSlot(displaySlot)
+          const seat = tableState.seats[physical]
           const isHero = Boolean(yourId && seat?.player_id === yourId)
+          const isDealer = dealerPhysical === physical
           return (
             <div
-              key={i}
+              key={`${displaySlot}-${physical}`}
               className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
               style={{ top: pos.top, left: pos.left }}
             >
               <SeatTile
                 seat={seat}
-                seatIndex={i}
+                seatIndex={physical}
                 isHero={isHero}
-                isDealer={dealer === i}
-                showTimer={hasActionClock && timerSeatIndex === i}
+                isDealer={isDealer}
+                showTimer={hasActionClock && timerDisplaySlot === displaySlot}
                 timerFraction={timerFraction}
               />
             </div>
@@ -80,7 +100,7 @@ export function TableOval({
   )
 }
 
-export function BoardRail({ board }: { board: string[] }) {
+export function BoardRail({ board }: { board: string[] | null | undefined }) {
   return (
     <div className="min-h-[52px]">
       <AnimatedCardRow codes={board} faceDown={false} muck={false} prefix="board" />

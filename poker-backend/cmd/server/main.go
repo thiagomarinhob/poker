@@ -66,7 +66,7 @@ func main() {
 	tableReg := table.NewRegistry(ctx)
 	hub := ws.NewHub(tableReg)
 	tableReg.SetClearPumpHook(func(id uuid.UUID) { hub.ClearPump(id) })
-	wsHandler := ws.NewHandler(hub, cfg.JWTSecret)
+	wsHandler := ws.NewHandler(hub, cfg.JWTSecret, queries)
 	tableHandler := table.NewHandler(tableReg, hub.PumpRoom)
 
 	adminHandler := admin.New(

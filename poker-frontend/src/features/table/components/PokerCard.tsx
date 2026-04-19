@@ -76,18 +76,19 @@ export function PokerCard({ code, faceDown, className = '', dealDelay = 0, layou
 }
 
 type CardRowProps = {
-  codes: string[]
+  codes: string[] | null | undefined
   faceDown?: boolean
   muck?: boolean
   prefix?: string
 }
 
 export function AnimatedCardRow({ codes, faceDown, muck, prefix = 'c' }: CardRowProps) {
+  const safeCodes = codes ?? []
   return (
     <div className="flex gap-1.5 justify-center">
       <AnimatePresence mode="popLayout">
         {!muck &&
-          codes.map((c, i) => (
+          safeCodes.map((c, i) => (
             <PokerCard key={`${prefix}-${i}-${c}`} code={c} faceDown={faceDown} dealDelay={i} layoutId={`${prefix}-${i}`} />
           ))}
       </AnimatePresence>

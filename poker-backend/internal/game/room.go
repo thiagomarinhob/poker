@@ -25,7 +25,9 @@ type SitDown struct {
 	Seat     int
 	BuyIn    int
 	SitOut   bool
-	Resp     chan error
+	// DisplayEmail rótulo público na mesa (ex.: email), preenchido pelo WS ao sentar.
+	DisplayEmail string
+	Resp         chan error
 }
 
 func (SitDown) isCommand() {}
@@ -106,18 +108,20 @@ type ActionRequired struct {
 func (ActionRequired) isEvent() {}
 
 type HandComplete struct {
-	HandID     uuid.UUID
-	HandNumber int
-	Winners    []string
+	HandID        uuid.UUID
+	HandNumber    int
+	Winners       []string
+	WinnerEmails  []string
 }
 
 func (HandComplete) isEvent() {}
 
 type roomSeat struct {
-	userID    *uuid.UUID
-	player    *Player
-	sitOut    bool
-	connected bool
+	userID       *uuid.UUID
+	player       *Player
+	sitOut       bool
+	connected    bool
+	displayEmail string
 }
 
 type Room struct {
@@ -247,10 +251,11 @@ func (r *Room) onSitDown(c SitDown) error {
 	}
 
 	r.seats[c.Seat] = &roomSeat{
-		userID:    c.UserID,
-		player:    &Player{ID: c.PlayerID, Stack: c.BuyIn},
-		sitOut:    c.SitOut,
-		connected: true,
+		userID:       c.UserID,
+		player:       &Player{ID: c.PlayerID, Stack: c.BuyIn},
+		sitOut:       c.SitOut,
+		connected:    true,
+		displayEmail: c.DisplayEmail,
 	}
 	r.playerSeat[c.PlayerID] = c.Seat
 	r.maybeStartHand()
@@ -426,16 +431,23 @@ func (r *Room) afterActionOrProgress() {
 		hnd := r.hand
 		hid := r.activeHandID
 		winners := make([]string, 0, len(r.hand.Winners))
+		winnerEmails := make([]string, 0, len(r.hand.Winners))
 		for _, idx := range r.hand.Winners {
 			seatIdx := r.handToSeat[idx]
 			if seat := r.seats[seatIdx]; seat != nil {
 				winners = append(winners, seat.player.ID)
+				label := seat.displayEmail
+				if label == "" {
+					label = seat.player.ID
+				}
+				winnerEmails = append(winnerEmails, label)
 			}
 		}
 		r.emit(HandComplete{
-			HandID:     hid,
-			HandNumber: r.handCounter,
-			Winners:    winners,
+			HandID:       hid,
+			HandNumber:   r.handCounter,
+			Winners:      winners,
+			WinnerEmails: winnerEmails,
 		})
 		r.persistHandComplete(hnd, hid)
 		r.stopTurnTimer()

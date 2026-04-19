@@ -42,6 +42,7 @@ func (r *Room) TableStateViewForPlayer(viewerPlayerID string) TableStateView {
 	}
 	if r.hand == nil {
 		v.Seats = r.seatViewsLobby()
+		v.Board = []string{}
 		return v
 	}
 	v.HandID = r.activeHandID
@@ -55,8 +56,10 @@ func (r *Room) TableStateViewForPlayer(viewerPlayerID string) TableStateView {
 		board[i] = c.String()
 	}
 	v.Board = board
-	ai := r.hand.ActionOn
-	v.ActionOnIndex = &ai
+	if r.hand.ActionOn >= 0 && r.hand.ActionOn < len(r.handToSeat) {
+		phys := r.handToSeat[r.hand.ActionOn]
+		v.ActionOnIndex = &phys
+	}
 
 	v.Seats = r.seatViewsForHand(viewerPlayerID)
 	_, inHand, cards := r.viewerHandInfo(viewerPlayerID)

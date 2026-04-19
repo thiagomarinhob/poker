@@ -122,6 +122,25 @@ export function TablePage() {
     playHandEnd()
   }, [lastHandResult, playHandEnd])
 
+  const [handResultSecondsLeft, setHandResultSecondsLeft] = useState<number | null>(null)
+  useEffect(() => {
+    if (!lastHandResult) {
+      setHandResultSecondsLeft(null)
+      return
+    }
+    setHandResultSecondsLeft(5)
+    let left = 5
+    const tick = window.setInterval(() => {
+      left -= 1
+      setHandResultSecondsLeft(left)
+      if (left <= 0) {
+        window.clearInterval(tick)
+        clearHandResult()
+      }
+    }, 1000)
+    return () => window.clearInterval(tick)
+  }, [lastHandResult?.hand_id, lastHandResult?.hand_number, clearHandResult])
+
   useEffect(() => {
     if (!actionRequired || !yourId) return
     if (actionRequired.player_id !== yourId) return
@@ -136,6 +155,17 @@ export function TablePage() {
   }
 
   const maxSeats = meta?.max_seats ?? 9
+
+  const isSeated = Boolean(yourId && tableState?.seats?.some((s) => s.player_id === yourId))
+  const showJoinPanel = !isSeated || !pokerSocket.isOpen
+
+  const winnerDisplayList =
+    lastHandResult == null
+      ? []
+      : lastHandResult.winner_emails &&
+          lastHandResult.winner_emails.length === lastHandResult.winners.length
+        ? lastHandResult.winner_emails
+        : lastHandResult.winners
 
   return (
     <div className="flex min-h-screen flex-col bg-[#070a0c] text-white">
@@ -170,7 +200,10 @@ export function TablePage() {
           {lastHandResult && (
             <div className="flex justify-between gap-4 rounded-xl border border-emerald-900/40 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-100">
               <span>
-                Mão #{lastHandResult.hand_number} — vencedores: {lastHandResult.winners.join(', ') || '—'}
+                Mão #{lastHandResult.hand_number} — vencedores: {winnerDisplayList.join(', ') || '—'}
+                {handResultSecondsLeft !== null && handResultSecondsLeft > 0 && (
+                  <span className="ml-2 text-emerald-300/90">· próxima em {handResultSecondsLeft}s</span>
+                )}
               </span>
               <button type="button" className="shrink-0 text-emerald-400 hover:text-emerald-200" onClick={clearHandResult}>
                 OK
@@ -178,44 +211,46 @@ export function TablePage() {
             </div>
           )}
 
-          <section className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm">
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Entrar na mesa</h2>
-            <div className="flex flex-wrap items-end gap-4">
-              <label className="flex flex-col gap-1 text-xs text-gray-500">
-                Assento
-                <select
-                  value={seat}
-                  onChange={(e) => setSeat(Number(e.target.value))}
-                  className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white"
+          {showJoinPanel && (
+            <section className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-lg backdrop-blur-sm">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">Entrar na mesa</h2>
+              <div className="flex flex-wrap items-end gap-4">
+                <label className="flex flex-col gap-1 text-xs text-gray-500">
+                  Assento
+                  <select
+                    value={seat}
+                    onChange={(e) => setSeat(Number(e.target.value))}
+                    className="rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white"
+                  >
+                    {Array.from({ length: maxSeats }, (_, i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs text-gray-500">
+                  Buy-in (fichas)
+                  <input
+                    type="number"
+                    min={1}
+                    value={buyIn}
+                    onChange={(e) => setBuyIn(Number(e.target.value))}
+                    className="w-32 rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={handleJoin}
+                  disabled={!pokerSocket.isOpen}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-40"
                 >
-                  {Array.from({ length: maxSeats }, (_, i) => (
-                    <option key={i} value={i}>
-                      {i}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col gap-1 text-xs text-gray-500">
-                Buy-in (fichas)
-                <input
-                  type="number"
-                  min={1}
-                  value={buyIn}
-                  onChange={(e) => setBuyIn(Number(e.target.value))}
-                  className="w-32 rounded-lg border border-white/15 bg-black/40 px-3 py-2 text-sm text-white"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={handleJoin}
-                disabled={!pokerSocket.isOpen}
-                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-40"
-              >
-                Sentar / reconectar
-              </button>
-            </div>
-            {!pokerSocket.isOpen && <p className="mt-2 text-xs text-amber-400">Aguardando WebSocket…</p>}
-          </section>
+                  Sentar / reconectar
+                </button>
+              </div>
+              {!pokerSocket.isOpen && <p className="mt-2 text-xs text-amber-400">Aguardando WebSocket…</p>}
+            </section>
+          )}
 
           {tableState && (
             <>
